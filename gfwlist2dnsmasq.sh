@@ -39,16 +39,16 @@ Valid options are:
                 DNS IP address for the GfwList Domains (Default: 127.0.0.1)
     -p, --port <dns_port>
                 DNS Port for the GfwList Domains (Default: 5353)
-    -s, --ipset <ipset_name>
-                Ipset name for the GfwList domains
-                (If not given, ipset rules will not be generated.)
+    -s, --nftset <nftset_name>
+                nftset name for the GfwList domains
+                (If not given, nftset rules will not be generated.)
     -o, --output <FILE>
                 /path/to/output_filename
     -i, --insecure
                 Force bypass certificate validation (insecure)
     -l, --domain-list
                 Convert Gfwlist into domain list instead of dnsmasq rules
-                (If this option is set, DNS IP/Port & ipset are not needed)
+                (If this option is set, DNS IP/Port & nftset are not needed)
         --exclude-domain-file <FILE>
                 Delete specific domains in the result from a domain list text file
                 Please put one domain per line
@@ -133,7 +133,7 @@ get_args(){
                 DNS_PORT="$2"
                 shift
                 ;;
-            --ipset | -s)
+            --nftset | -s)
                 IPSET_NAME="$2"
                 shift
                 ;;
@@ -188,7 +188,7 @@ get_args(){
             exit 1
         fi
 
-        # Check ipset name
+        # Check nftset name
         if [ -z $IPSET_NAME ]; then
             WITH_IPSET=0
         else
@@ -282,11 +282,11 @@ process(){
     if [ $OUT_TYPE = 'DNSMASQ_RULES' ]; then
     # Convert domains into dnsmasq rules
         if [ $WITH_IPSET -eq 1 ]; then
-            _green 'Ipset rules included.'
+            _green 'nftset rules included.'
             sort -u $DOMAIN_FILE | $SED_ERES 's#(.+)#server=/\1/'$DNS_IP'\#'$DNS_PORT'\
-ipset=/\1/'$IPSET_NAME'#g' > $CONF_TMP_FILE
+nftset=/\1/4\#inet\#fw4\#'$IPSET_NAME'#g' > $CONF_TMP_FILE
         else
-            _green 'Ipset rules not included.'
+            _green 'nftset rules not included.'
             sort -u $DOMAIN_FILE | $SED_ERES 's#(.+)#server=/\1/'$DNS_IP'\#'$DNS_PORT'#g' > $CONF_TMP_FILE
         fi
 
